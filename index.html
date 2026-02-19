@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meu Controle Financeiro</title>
+<title>Plano Financeiro 2026</title>
 
 <style>
 body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f2f2f2;
     padding: 20px;
     max-width: 500px;
     margin: auto;
@@ -16,21 +16,23 @@ body {
 
 h1 {
     text-align: center;
+    margin-bottom: 30px;
 }
 
 .card {
     background: white;
     padding: 15px;
     margin-bottom: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
 }
 
 input {
     width: 100%;
     padding: 10px;
-    margin: 8px 0;
-    font-size: 16px;
+    margin: 6px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
 }
 
 button {
@@ -39,8 +41,31 @@ button {
     background: black;
     color: white;
     border: none;
-    border-radius: 6px;
-    font-size: 16px;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.progress-container {
+    background: #eee;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 12px;
+}
+
+.progress-bar {
+    height: 12px;
+    background: black;
+    width: 0%;
 }
 
 .result {
@@ -55,51 +80,106 @@ button {
 <h1>Plano Financeiro 2026</h1>
 
 <div class="card">
-<h2>Adicionar Entrada</h2>
-<input type="number" id="entrada" placeholder="Valor da entrada">
-<button onclick="adicionarEntrada()">Adicionar</button>
+<h3>Meta Mensal</h3>
+<input type="number" id="meta" placeholder="Digite sua meta mensal">
+<div class="progress-container">
+<div class="progress-bar" id="barra"></div>
+</div>
+<p>Progresso: R$ <span id="progresso">0</span></p>
 </div>
 
 <div class="card">
-<h2>Adicionar Saída</h2>
-<input type="number" id="saida" placeholder="Valor da saída">
-<button onclick="adicionarSaida()">Adicionar</button>
+<h3>Adicionar Entrada</h3>
+<input type="text" id="origemEntrada" placeholder="De onde entrou">
+<input type="number" id="valorEntrada" placeholder="Valor">
+<button onclick="adicionarEntrada()">Adicionar Entrada</button>
 </div>
 
 <div class="card">
-<h2>Resumo</h2>
+<h3>Adicionar Saída</h3>
+<input type="text" id="nomeSaida" placeholder="Do que saiu">
+<input type="number" id="valorSaida" placeholder="Valor">
+<button onclick="adicionarSaida()">Adicionar Saída</button>
+</div>
+
+<div class="card">
+<h3>Resumo</h3>
 <p>Total Entradas: R$ <span id="totalEntradas">0</span></p>
 <p>Total Saídas: R$ <span id="totalSaidas">0</span></p>
 <p class="result">Saldo: R$ <span id="saldo">0</span></p>
 </div>
 
+<div class="card">
+<h3>Lançamentos</h3>
+<ul id="lista"></ul>
+</div>
+
 <script>
-let totalEntradas = 0;
-let totalSaidas = 0;
+let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
+let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+let meta = localStorage.getItem("meta") || 0;
+
+document.getElementById("meta").value = meta;
+
+function salvar() {
+    localStorage.setItem("entradas", JSON.stringify(entradas));
+    localStorage.setItem("saidas", JSON.stringify(saidas));
+    localStorage.setItem("meta", document.getElementById("meta").value);
+}
 
 function adicionarEntrada() {
-    let valor = parseFloat(document.getElementById("entrada").value);
-    if (!isNaN(valor)) {
-        totalEntradas += valor;
+    let origem = document.getElementById("origemEntrada").value;
+    let valor = parseFloat(document.getElementById("valorEntrada").value);
+    if (origem && !isNaN(valor)) {
+        entradas.push({ origem, valor });
         atualizar();
     }
-    document.getElementById("entrada").value = "";
 }
 
 function adicionarSaida() {
-    let valor = parseFloat(document.getElementById("saida").value);
-    if (!isNaN(valor)) {
-        totalSaidas += valor;
+    let nome = document.getElementById("nomeSaida").value;
+    let valor = parseFloat(document.getElementById("valorSaida").value);
+    if (nome && !isNaN(valor)) {
+        saidas.push({ nome, valor });
         atualizar();
     }
-    document.getElementById("saida").value = "";
 }
 
 function atualizar() {
+    salvar();
+
+    let totalEntradas = entradas.reduce((acc, item) => acc + item.valor, 0);
+    let totalSaidas = saidas.reduce((acc, item) => acc + item.valor, 0);
+    let saldo = totalEntradas - totalSaidas;
+
     document.getElementById("totalEntradas").innerText = totalEntradas.toFixed(2);
     document.getElementById("totalSaidas").innerText = totalSaidas.toFixed(2);
-    document.getElementById("saldo").innerText = (totalEntradas - totalSaidas).toFixed(2);
+    document.getElementById("saldo").innerText = saldo.toFixed(2);
+
+    let lista = document.getElementById("lista");
+    lista.innerHTML = "";
+
+    entradas.forEach(item => {
+        lista.innerHTML += `<li>+ ${item.origem} — R$ ${item.valor.toFixed(2)}</li>`;
+    });
+
+    saidas.forEach(item => {
+        lista.innerHTML += `<li>- ${item.nome} — R$ ${item.valor.toFixed(2)}</li>`;
+    });
+
+    atualizarMeta(totalEntradas);
 }
+
+function atualizarMeta(totalEntradas) {
+    let metaValor = parseFloat(document.getElementById("meta").value) || 0;
+    let progresso = metaValor > 0 ? (totalEntradas / metaValor) * 100 : 0;
+    progresso = progresso > 100 ? 100 : progresso;
+
+    document.getElementById("barra").style.width = progresso + "%";
+    document.getElementById("progresso").innerText = totalEntradas.toFixed(2);
+}
+
+atualizar();
 </script>
 
 </body>
