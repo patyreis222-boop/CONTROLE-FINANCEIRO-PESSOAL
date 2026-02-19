@@ -8,26 +8,23 @@
 <style>
 body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #f3f3f3;
+    background: #f4f4f4;
     padding: 20px;
-    max-width: 500px;
+    max-width: 520px;
     margin: auto;
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 25px;
-}
+h1 { text-align: center; }
 
 .card {
     background: white;
     padding: 15px;
-    margin-bottom: 18px;
+    margin-bottom: 15px;
     border-radius: 14px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.06);
 }
 
-input {
+input, select {
     width: 100%;
     padding: 10px;
     margin: 6px 0;
@@ -37,37 +34,24 @@ input {
 
 button {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     background: black;
     color: white;
     border: none;
     border-radius: 8px;
-    margin-top: 8px;
+    margin-top: 6px;
 }
 
-.resumo {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-}
+.green { color: green; }
+.red { color: red; }
+.orange { color: orange; }
 
-.total-entrada { color: green; }
-.total-saida { color: red; }
-.saldo { font-weight: bold; font-size: 18px; }
-
-ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
+ul { list-style: none; padding: 0; }
 
 li {
     padding: 8px 0;
     border-bottom: 1px solid #eee;
 }
-
-.entrada { color: green; }
-.saida { color: red; }
 </style>
 </head>
 
@@ -76,34 +60,54 @@ li {
 <h1>Controle Financeiro</h1>
 
 <div class="card">
+<h3>Filtrar por Mês</h3>
+<select id="filtroMes" onchange="atualizar()">
+<option value="todos">Todos</option>
+<option value="0">Janeiro</option>
+<option value="1">Fevereiro</option>
+<option value="2">Março</option>
+<option value="3">Abril</option>
+<option value="4">Maio</option>
+<option value="5">Junho</option>
+<option value="6">Julho</option>
+<option value="7">Agosto</option>
+<option value="8">Setembro</option>
+<option value="9">Outubro</option>
+<option value="10">Novembro</option>
+<option value="11">Dezembro</option>
+</select>
+</div>
+
+<div class="card">
 <h3>Adicionar Entrada</h3>
 <input type="text" id="origemEntrada" placeholder="De onde entrou">
 <input type="number" id="valorEntrada" placeholder="Valor">
-<button onclick="adicionarEntrada()">Adicionar Entrada</button>
+<input type="date" id="dataEntrada">
+<button onclick="adicionarEntrada()">Adicionar</button>
 </div>
 
 <div class="card">
 <h3>Adicionar Saída</h3>
 <input type="text" id="nomeSaida" placeholder="Do que saiu">
 <input type="number" id="valorSaida" placeholder="Valor">
-<button onclick="adicionarSaida()">Adicionar Saída</button>
+<input type="date" id="dataSaida">
+<button onclick="adicionarSaida()">Adicionar</button>
 </div>
 
 <div class="card">
-<div class="resumo total-entrada">
-<span>Total Entradas:</span>
-<span id="totalEntradas">R$ 0</span>
+<h3>Contas a Pagar</h3>
+<input type="text" id="nomeConta" placeholder="Nome da conta">
+<input type="number" id="valorConta" placeholder="Valor">
+<input type="date" id="dataConta">
+<button onclick="adicionarConta()">Adicionar Conta</button>
+<ul id="listaContas"></ul>
 </div>
 
-<div class="resumo total-saida">
-<span>Total Saídas:</span>
-<span id="totalSaidas">R$ 0</span>
-</div>
-
-<div class="resumo saldo">
-<span>Saldo:</span>
-<span id="saldo">R$ 0</span>
-</div>
+<div class="card">
+<h3>Resumo</h3>
+<p>Total Entradas: R$ <span id="totalEntradas">0</span></p>
+<p>Total Saídas: R$ <span id="totalSaidas">0</span></p>
+<p><strong>Saldo: R$ <span id="saldo">0</span></strong></p>
 </div>
 
 <div class="card">
@@ -111,60 +115,125 @@ li {
 <ul id="lista"></ul>
 </div>
 
+<div class="card">
+<button onclick="exportarPDF()">Exportar PDF</button>
+</div>
+
 <script>
 let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
 let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
+let contas = JSON.parse(localStorage.getItem("contas")) || [];
 
 function salvar() {
-    localStorage.setItem("entradas", JSON.stringify(entradas));
-    localStorage.setItem("saidas", JSON.stringify(saidas));
+localStorage.setItem("entradas", JSON.stringify(entradas));
+localStorage.setItem("saidas", JSON.stringify(saidas));
+localStorage.setItem("contas", JSON.stringify(contas));
 }
 
 function adicionarEntrada() {
-    let origem = document.getElementById("origemEntrada").value;
-    let valor = parseFloat(document.getElementById("valorEntrada").value);
+let origem = origemEntrada.value;
+let valor = parseFloat(valorEntrada.value);
+let data = dataEntrada.value;
 
-    if (origem && !isNaN(valor)) {
-        entradas.push({ origem, valor });
-        document.getElementById("origemEntrada").value = "";
-        document.getElementById("valorEntrada").value = "";
-        atualizar();
-    }
+if(origem && valor && data){
+entradas.push({origem, valor, data});
+origemEntrada.value="";
+valorEntrada.value="";
+dataEntrada.value="";
+atualizar();
+}
 }
 
 function adicionarSaida() {
-    let nome = document.getElementById("nomeSaida").value;
-    let valor = parseFloat(document.getElementById("valorSaida").value);
+let nome = nomeSaida.value;
+let valor = parseFloat(valorSaida.value);
+let data = dataSaida.value;
 
-    if (nome && !isNaN(valor)) {
-        saidas.push({ nome, valor });
-        document.getElementById("nomeSaida").value = "";
-        document.getElementById("valorSaida").value = "";
-        atualizar();
-    }
+if(nome && valor && data){
+saidas.push({nome, valor, data});
+nomeSaida.value="";
+valorSaida.value="";
+dataSaida.value="";
+atualizar();
+}
 }
 
-function atualizar() {
-    salvar();
+function adicionarConta() {
+let nome = nomeConta.value;
+let valor = parseFloat(valorConta.value);
+let data = dataConta.value;
 
-    let totalEntradas = entradas.reduce((acc, item) => acc + item.valor, 0);
-    let totalSaidas = saidas.reduce((acc, item) => acc + item.valor, 0);
-    let saldo = totalEntradas - totalSaidas;
+if(nome && valor && data){
+contas.push({nome, valor, data, pago:false});
+nomeConta.value="";
+valorConta.value="";
+dataConta.value="";
+atualizar();
+}
+}
 
-    document.getElementById("totalEntradas").innerText = "R$ " + totalEntradas.toFixed(2);
-    document.getElementById("totalSaidas").innerText = "R$ " + totalSaidas.toFixed(2);
-    document.getElementById("saldo").innerText = "R$ " + saldo.toFixed(2);
+function marcarPago(index){
+let conta = contas[index];
+conta.pago = true;
+saidas.push({nome: conta.nome, valor: conta.valor, data: conta.data});
+atualizar();
+}
 
-    let lista = document.getElementById("lista");
-    lista.innerHTML = "";
+function atualizar(){
+salvar();
 
-    entradas.forEach(item => {
-        lista.innerHTML += `<li class="entrada">+ ${item.origem} — R$ ${item.valor.toFixed(2)}</li>`;
-    });
+let mesFiltro = filtroMes.value;
+let hoje = new Date();
 
-    saidas.forEach(item => {
-        lista.innerHTML += `<li class="saida">- ${item.nome} — R$ ${item.valor.toFixed(2)}</li>`;
-    });
+let totalEntradas = 0;
+let totalSaidas = 0;
+let lista = document.getElementById("lista");
+let listaContas = document.getElementById("listaContas");
+
+lista.innerHTML="";
+listaContas.innerHTML="";
+
+entradas.forEach(e=>{
+let mes = new Date(e.data).getMonth();
+if(mesFiltro==="todos" || mesFiltro==mes){
+totalEntradas += e.valor;
+lista.innerHTML += `<li class="green">+ ${e.origem} — R$ ${e.valor.toFixed(2)}</li>`;
+}
+});
+
+saidas.forEach(s=>{
+let mes = new Date(s.data).getMonth();
+if(mesFiltro==="todos" || mesFiltro==mes){
+totalSaidas += s.valor;
+lista.innerHTML += `<li class="red">- ${s.nome} — R$ ${s.valor.toFixed(2)}</li>`;
+}
+});
+
+contas.forEach((c,i)=>{
+if(!c.pago){
+let dataVenc = new Date(c.data);
+let status = "";
+if(dataVenc < hoje){
+status="red";
+}else{
+status="orange";
+}
+
+listaContas.innerHTML += `
+<li class="${status}">
+${c.nome} — R$ ${c.valor.toFixed(2)} — vence ${c.data}
+<button onclick="marcarPago(${i})">Marcar como Pago</button>
+</li>`;
+}
+});
+
+document.getElementById("totalEntradas").innerText = totalEntradas.toFixed(2);
+document.getElementById("totalSaidas").innerText = totalSaidas.toFixed(2);
+document.getElementById("saldo").innerText = (totalEntradas-totalSaidas).toFixed(2);
+}
+
+function exportarPDF(){
+window.print();
 }
 
 atualizar();
