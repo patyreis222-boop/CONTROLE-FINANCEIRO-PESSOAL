@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Plano Financeiro 2026</title>
+<title>Controle Financeiro</title>
 
 <style>
 body {
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #f2f2f2;
+    background: #f3f3f3;
     padding: 20px;
     max-width: 500px;
     margin: auto;
@@ -16,15 +16,15 @@ body {
 
 h1 {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .card {
     background: white;
     padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 16px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    margin-bottom: 18px;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
 }
 
 input {
@@ -45,9 +45,20 @@ button {
     margin-top: 8px;
 }
 
+.resumo {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.total-entrada { color: green; }
+.total-saida { color: red; }
+.saldo { font-weight: bold; font-size: 18px; }
+
 ul {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
 li {
@@ -55,38 +66,14 @@ li {
     border-bottom: 1px solid #eee;
 }
 
-.progress-container {
-    background: #eee;
-    border-radius: 10px;
-    overflow: hidden;
-    height: 12px;
-}
-
-.progress-bar {
-    height: 12px;
-    background: black;
-    width: 0%;
-}
-
-.result {
-    font-weight: bold;
-    font-size: 18px;
-}
+.entrada { color: green; }
+.saida { color: red; }
 </style>
 </head>
 
 <body>
 
-<h1>Plano Financeiro 2026</h1>
-
-<div class="card">
-<h3>Meta Mensal</h3>
-<input type="number" id="meta" placeholder="Digite sua meta mensal">
-<div class="progress-container">
-<div class="progress-bar" id="barra"></div>
-</div>
-<p>Progresso: R$ <span id="progresso">0</span></p>
-</div>
+<h1>Controle Financeiro</h1>
 
 <div class="card">
 <h3>Adicionar Entrada</h3>
@@ -103,10 +90,20 @@ li {
 </div>
 
 <div class="card">
-<h3>Resumo</h3>
-<p>Total Entradas: R$ <span id="totalEntradas">0</span></p>
-<p>Total Saídas: R$ <span id="totalSaidas">0</span></p>
-<p class="result">Saldo: R$ <span id="saldo">0</span></p>
+<div class="resumo total-entrada">
+<span>Total Entradas:</span>
+<span id="totalEntradas">R$ 0</span>
+</div>
+
+<div class="resumo total-saida">
+<span>Total Saídas:</span>
+<span id="totalSaidas">R$ 0</span>
+</div>
+
+<div class="resumo saldo">
+<span>Saldo:</span>
+<span id="saldo">R$ 0</span>
+</div>
 </div>
 
 <div class="card">
@@ -117,21 +114,20 @@ li {
 <script>
 let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
 let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
-let meta = localStorage.getItem("meta") || 0;
-
-document.getElementById("meta").value = meta;
 
 function salvar() {
     localStorage.setItem("entradas", JSON.stringify(entradas));
     localStorage.setItem("saidas", JSON.stringify(saidas));
-    localStorage.setItem("meta", document.getElementById("meta").value);
 }
 
 function adicionarEntrada() {
     let origem = document.getElementById("origemEntrada").value;
     let valor = parseFloat(document.getElementById("valorEntrada").value);
+
     if (origem && !isNaN(valor)) {
         entradas.push({ origem, valor });
+        document.getElementById("origemEntrada").value = "";
+        document.getElementById("valorEntrada").value = "";
         atualizar();
     }
 }
@@ -139,8 +135,11 @@ function adicionarEntrada() {
 function adicionarSaida() {
     let nome = document.getElementById("nomeSaida").value;
     let valor = parseFloat(document.getElementById("valorSaida").value);
+
     if (nome && !isNaN(valor)) {
         saidas.push({ nome, valor });
+        document.getElementById("nomeSaida").value = "";
+        document.getElementById("valorSaida").value = "";
         atualizar();
     }
 }
@@ -152,31 +151,20 @@ function atualizar() {
     let totalSaidas = saidas.reduce((acc, item) => acc + item.valor, 0);
     let saldo = totalEntradas - totalSaidas;
 
-    document.getElementById("totalEntradas").innerText = totalEntradas.toFixed(2);
-    document.getElementById("totalSaidas").innerText = totalSaidas.toFixed(2);
-    document.getElementById("saldo").innerText = saldo.toFixed(2);
+    document.getElementById("totalEntradas").innerText = "R$ " + totalEntradas.toFixed(2);
+    document.getElementById("totalSaidas").innerText = "R$ " + totalSaidas.toFixed(2);
+    document.getElementById("saldo").innerText = "R$ " + saldo.toFixed(2);
 
     let lista = document.getElementById("lista");
     lista.innerHTML = "";
 
     entradas.forEach(item => {
-        lista.innerHTML += `<li>+ ${item.origem} — R$ ${item.valor.toFixed(2)}</li>`;
+        lista.innerHTML += `<li class="entrada">+ ${item.origem} — R$ ${item.valor.toFixed(2)}</li>`;
     });
 
     saidas.forEach(item => {
-        lista.innerHTML += `<li>- ${item.nome} — R$ ${item.valor.toFixed(2)}</li>`;
+        lista.innerHTML += `<li class="saida">- ${item.nome} — R$ ${item.valor.toFixed(2)}</li>`;
     });
-
-    atualizarMeta(totalEntradas);
-}
-
-function atualizarMeta(totalEntradas) {
-    let metaValor = parseFloat(document.getElementById("meta").value) || 0;
-    let progresso = metaValor > 0 ? (totalEntradas / metaValor) * 100 : 0;
-    progresso = progresso > 100 ? 100 : progresso;
-
-    document.getElementById("barra").style.width = progresso + "%";
-    document.getElementById("progresso").innerText = totalEntradas.toFixed(2);
 }
 
 atualizar();
