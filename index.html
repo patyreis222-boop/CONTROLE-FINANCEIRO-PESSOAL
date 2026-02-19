@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu Controle Financeiro</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    padding: 20px;
+    max-width: 500px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: black;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.result {
+    font-weight: bold;
+    font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Plano Financeiro 2026</h1>
+
+<div class="card">
+<h2>Adicionar Entrada</h2>
+<input type="number" id="entrada" placeholder="Valor da entrada">
+<button onclick="adicionarEntrada()">Adicionar</button>
+</div>
+
+<div class="card">
+<h2>Adicionar Saída</h2>
+<input type="number" id="saida" placeholder="Valor da saída">
+<button onclick="adicionarSaida()">Adicionar</button>
+</div>
+
+<div class="card">
+<h2>Resumo</h2>
+<p>Total Entradas: R$ <span id="totalEntradas">0</span></p>
+<p>Total Saídas: R$ <span id="totalSaidas">0</span></p>
+<p class="result">Saldo: R$ <span id="saldo">0</span></p>
+</div>
+
+<script>
+let totalEntradas = 0;
+let totalSaidas = 0;
+
+function adicionarEntrada() {
+    let valor = parseFloat(document.getElementById("entrada").value);
+    if (!isNaN(valor)) {
+        totalEntradas += valor;
+        atualizar();
+    }
+    document.getElementById("entrada").value = "";
+}
+
+function adicionarSaida() {
+    let valor = parseFloat(document.getElementById("saida").value);
+    if (!isNaN(valor)) {
+        totalSaidas += valor;
+        atualizar();
+    }
+    document.getElementById("saida").value = "";
+}
+
+function atualizar() {
+    document.getElementById("totalEntradas").innerText = totalEntradas.toFixed(2);
+    document.getElementById("totalSaidas").innerText = totalSaidas.toFixed(2);
+    document.getElementById("saldo").innerText = (totalEntradas - totalSaidas).toFixed(2);
+}
+</script>
+
+</body>
+</html>
