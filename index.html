@@ -105,9 +105,9 @@ li {
 
 <div class="card">
 <h3>Resumo</h3>
-<p>Total Entradas: R$ <span id="totalEntradas">0</span></p>
-<p>Total Saídas: R$ <span id="totalSaidas">0</span></p>
-<p><strong>Saldo: R$ <span id="saldo">0</span></strong></p>
+<p>Total Entradas: R$ <span id="totalEntradas">0.00</span></p>
+<p>Total Saídas: R$ <span id="totalSaidas">0.00</span></p>
+<p><strong>Saldo: R$ <span id="saldo">0.00</span></strong></p>
 </div>
 
 <div class="card">
@@ -115,59 +115,56 @@ li {
 <ul id="lista"></ul>
 </div>
 
-<div class="card">
-<button onclick="exportarPDF()">Exportar PDF</button>
-</div>
-
 <script>
+
 let entradas = JSON.parse(localStorage.getItem("entradas")) || [];
 let saidas = JSON.parse(localStorage.getItem("saidas")) || [];
 let contas = JSON.parse(localStorage.getItem("contas")) || [];
 
-function salvar() {
+function salvar(){
 localStorage.setItem("entradas", JSON.stringify(entradas));
 localStorage.setItem("saidas", JSON.stringify(saidas));
 localStorage.setItem("contas", JSON.stringify(contas));
 }
 
-function adicionarEntrada() {
-let origem = origemEntrada.value;
-let valor = parseFloat(valorEntrada.value);
-let data = dataEntrada.value;
+function adicionarEntrada(){
+let origem = document.getElementById("origemEntrada").value;
+let valor = parseFloat(document.getElementById("valorEntrada").value);
+let data = document.getElementById("dataEntrada").value;
 
-if(origem && valor && data){
+if(origem && !isNaN(valor) && data){
 entradas.push({origem, valor, data});
-origemEntrada.value="";
-valorEntrada.value="";
-dataEntrada.value="";
+document.getElementById("origemEntrada").value="";
+document.getElementById("valorEntrada").value="";
+document.getElementById("dataEntrada").value="";
 atualizar();
 }
 }
 
-function adicionarSaida() {
-let nome = nomeSaida.value;
-let valor = parseFloat(valorSaida.value);
-let data = dataSaida.value;
+function adicionarSaida(){
+let nome = document.getElementById("nomeSaida").value;
+let valor = parseFloat(document.getElementById("valorSaida").value);
+let data = document.getElementById("dataSaida").value;
 
-if(nome && valor && data){
+if(nome && !isNaN(valor) && data){
 saidas.push({nome, valor, data});
-nomeSaida.value="";
-valorSaida.value="";
-dataSaida.value="";
+document.getElementById("nomeSaida").value="";
+document.getElementById("valorSaida").value="";
+document.getElementById("dataSaida").value="";
 atualizar();
 }
 }
 
-function adicionarConta() {
-let nome = nomeConta.value;
-let valor = parseFloat(valorConta.value);
-let data = dataConta.value;
+function adicionarConta(){
+let nome = document.getElementById("nomeConta").value;
+let valor = parseFloat(document.getElementById("valorConta").value);
+let data = document.getElementById("dataConta").value;
 
-if(nome && valor && data){
+if(nome && !isNaN(valor) && data){
 contas.push({nome, valor, data, pago:false});
-nomeConta.value="";
-valorConta.value="";
-dataConta.value="";
+document.getElementById("nomeConta").value="";
+document.getElementById("valorConta").value="";
+document.getElementById("dataConta").value="";
 atualizar();
 }
 }
@@ -180,20 +177,22 @@ atualizar();
 }
 
 function atualizar(){
+
 salvar();
 
-let mesFiltro = filtroMes.value;
+let mesFiltro = document.getElementById("filtroMes").value;
 let hoje = new Date();
 
 let totalEntradas = 0;
 let totalSaidas = 0;
+
 let lista = document.getElementById("lista");
 let listaContas = document.getElementById("listaContas");
 
 lista.innerHTML="";
 listaContas.innerHTML="";
 
-entradas.forEach(e=>{
+entradas.forEach((e)=>{
 let mes = new Date(e.data).getMonth();
 if(mesFiltro==="todos" || mesFiltro==mes){
 totalEntradas += e.valor;
@@ -201,7 +200,7 @@ lista.innerHTML += `<li class="green">+ ${e.origem} — R$ ${e.valor.toFixed(2)}
 }
 });
 
-saidas.forEach(s=>{
+saidas.forEach((s)=>{
 let mes = new Date(s.data).getMonth();
 if(mesFiltro==="todos" || mesFiltro==mes){
 totalSaidas += s.valor;
@@ -212,17 +211,21 @@ lista.innerHTML += `<li class="red">- ${s.nome} — R$ ${s.valor.toFixed(2)}</li
 contas.forEach((c,i)=>{
 if(!c.pago){
 let dataVenc = new Date(c.data);
-let status = "";
+let statusClass = "";
+let statusTexto = "";
+
 if(dataVenc < hoje){
-status="red";
+statusClass = "red";
+statusTexto = "Vencido";
 }else{
-status="orange";
+statusClass = "orange";
+statusTexto = "A vencer";
 }
 
 listaContas.innerHTML += `
-<li class="${status}">
-${c.nome} — R$ ${c.valor.toFixed(2)} — vence ${c.data}
-<button onclick="marcarPago(${i})">Marcar como Pago</button>
+<li class="${statusClass}">
+${c.nome} — R$ ${c.valor.toFixed(2)} — ${statusTexto}
+<button onclick="marcarPago(${i})">Pagar</button>
 </li>`;
 }
 });
@@ -230,13 +233,11 @@ ${c.nome} — R$ ${c.valor.toFixed(2)} — vence ${c.data}
 document.getElementById("totalEntradas").innerText = totalEntradas.toFixed(2);
 document.getElementById("totalSaidas").innerText = totalSaidas.toFixed(2);
 document.getElementById("saldo").innerText = (totalEntradas-totalSaidas).toFixed(2);
-}
 
-function exportarPDF(){
-window.print();
 }
 
 atualizar();
+
 </script>
 
 </body>
